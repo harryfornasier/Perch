@@ -1,0 +1,144 @@
+// FrigateAPI.m
+
+#import "FrigateAPI.h"
+#import "SimpleJSON.h"
+
+@implementation FrigateAPI
+
+@synthesize baseURL = _baseURL;
+
+// ─── Singleton ────────────────────────────────────────────────────────────────
+
++ (FrigateAPI *)sharedAPI {
+    static FrigateAPI *_instance = nil;
+    static dispatch_once_t _once;
+    dispatch_once(&_once, ^{
+        _instance = [[FrigateAPI alloc] init];
+    });
+    return _instance;
+}
+
+- (id)init {
+    if ((self = [super init])) {
+        _baseURL = [@"http://192.168.8.102:54892" copy];
+    }
+    return self;
+}
+
+- (void)dealloc {
+    [_baseURL release];
+    [super dealloc];
+}
+
+// ─── Internal fetch helpers ───────────────────────────────────────────────────
+
+// Fetches raw NSData from a URL string on a background thread.
+// Calls back on the main queue.
+- (void)fetchDataFromURL:(NSString *)urlString
+              completion:(void (^)(NSData *data, NSError *error))completion {
+    NSURL *url = [NSURL URLWithString:urlString];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSError *error = nil;
+        NSURLRequest *request = [NSURLRequest requestWithURL:url
+                                                 cachePolicy:NSURLRequestReloadIgnoringCacheData
+                                             timeoutInterval:5.0];
+        NSHTTPURLResponse *response = nil;
+        NSData *data = [NSURLConnection sendSynchronousRequest:request
+                                             returningResponse:&response
+                                                         error:&error];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(data, error);
+        });
+    });
+}
+
+// Fetches parsed JSON (id) from a URL string.
+- (void)fetchJSONFromURL:(NSString *)urlString
+              completion:(void (^)(id json, NSError *error))completion {
+    [self fetchDataFromURL:urlString completion:^(NSData *data, NSError *error) {
+        if (!data) {
+            completion(nil, error);
+            return;
+        }
+        id json = FNParseJSON(data, NULL);
+        completion(json, json ? nil : error);
+    }];
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+- (void)fetchCameraNames:(FNArrayBlock)completion {
+    NSString *url = [_baseURL stringByAppendingString:@"/api/config"];
+    [self fetchJSONFromURL:url completion:^(id json, NSError *error) {
+        NSDictionary *cameras = [json objectForKey:@"cameras"];
+        if ([cameras isKindOfClass:[NSDictionary class]]) {
+            NSArray *names = [[cameras allKeys]
+                              sortedArrayUsingSelector:@selector(compare:)];
+            completion(names, nil);
+        } else {
+            completion(nil, error);
+        }
+    }];
+}
+
+- (void)fetchLatestFrame:(NSString *)cameraName completion:(FNImageBlock)completion {
+    NSString *url = [NSString stringWithFormat:@"%@/api/%@/latest.jpg",
+                     _baseURL, cameraName];
+    [self fetchDataFromURL:url completion:^(NSData *data, NSError *error) {
+        if (!data) { completion(nil, error); return; }
+        NSImage *img = [[[NSImage alloc] initWithData:data] autorelease];
+        completion(img, img ? nil : error);
+    }];
+}
+
+- (void)fetchEvents:(NSUInteger)limit completion:(FNArrayBlock)completion {
+    NSString *url = [NSString stringWithFormat:
+                     @"%@/api/events?limit=%lu&include_thumbnails=0",
+                     _baseURL, (unsigned long)limit];
+    [self fetchJSONFromURL:url completion:^(id json, NSError *error) {
+        NSArray *arr = [json isKindOfClass:[NSArray class]] ? json : nil;
+        completion(arr, error);
+    }];
+}
+
+- (void)fetchPersonDetections:(NSUInteger)limit completion:(FNArrayBlock)completion {
+    NSString *url = [NSString stringWithFormat:
+                     @"%@/api/events?limit=%lu&label=person&include_thumbnails=0",
+                     _baseURL, (unsigned long)limit];
+    [self fetchJSONFromURL:url completion:^(id json, NSError *error) {
+        NSArray *arr = [json isKindOfClass:[NSArray class]] ? json : nil;
+        completion(arr, error);
+    }];
+}
+
+- (void)fetchPersonEventsSince:(double)timestamp completion:(FNArrayBlock)completion {
+    NSString *url = [NSString stringWithFormat:
+                     @"%@/api/events?limit=20&label=person&include_thumbnails=0&after=%lld",
+                     _baseURL, (long long)timestamp];
+    [self fetchJSONFromURL:url completion:^(id json, NSError *error) {
+        NSArray *arr = [json isKindOfClass:[NSArray class]] ? json : nil;
+        completion(arr, error);
+    }];
+}
+
+- (void)fetchThumbnail:(NSString *)eventId completion:(FNImageBlock)completion {
+    NSString *url = [NSString stringWithFormat:@"%@/api/events/%@/thumbnail.jpg",
+                     _baseURL, eventId];
+    [self fetchDataFromURL:url completion:^(NSData *data, NSError *error) {
+        if (!data) { completion(nil, error); return; }
+        NSImage *img = [[[NSImage alloc] initWithData:data] autorelease];
+        completion(img, img ? nil : error);
+    }];
+}
+
+- (NSURL *)clipURLForEvent:(NSString *)eventId {
+    return [NSURL URLWithString:
+            [NSString stringWithFormat:@"%@/api/events/%@/clip.mp4", _baseURL, eventId]];
+}
+
+- (NSURL *)webURLForEvent:(NSString *)eventId {
+    return [NSURL URLWithString:
+            [NSString stringWithFormat:@"%@/#/events?id=%@", _baseURL, eventId]];
+}
+
+@end
