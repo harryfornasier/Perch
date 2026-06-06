@@ -4,11 +4,11 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>Frigate Native</string>
+    <string>Perch</string>
     <key>CFBundleDisplayName</key>
-    <string>Frigate Native</string>
+    <string>Perch</string>
     <key>CFBundleIdentifier</key>
-    <string>com.local.frigate-native</string>
+    <string>com.local.perch</string>
     <key>CFBundleVersion</key>
     <string>1.0</string>
     <key>CFBundleShortVersionString</key>

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Frigate Native -- build script
+# Perch -- build script
 #
 # Compiles the Objective-C source into a double-clickable .app bundle.
 # Run this ONCE on your Snow Leopard Mac; the resulting .app appears here.
@@ -16,11 +16,11 @@ set -e
 # Work in the directory containing this script
 cd "$(dirname "$0")"
 
-APP_BUNDLE="Frigate Native.app"
+APP_BUNDLE="Perch.app"
 BINARY="FrigateNative"
 
 echo ""
-echo "=== Frigate Native -- Build ==="
+echo "=== Perch -- Build ==="
 echo ""
 
 # --- Find a compiler ---
@@ -106,5 +106,5 @@ echo "Build succeeded!"
 echo ""
 echo "  App: $(pwd)/$APP_BUNDLE"
 echo ""
-echo "  Double-click 'Frigate Native.app' to launch."
+echo "  Double-click 'Perch.app' to launch."
 echo ""

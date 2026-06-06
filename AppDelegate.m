@@ -1,5 +1,5 @@
 // AppDelegate.m
-// Programmatic Cocoa UI for Frigate Native — Snow Leopard Edition.
+// Programmatic Cocoa UI for Perch — Snow Leopard Edition.
 // No NIB/XIB. Manual memory management (no ARC).
 //
 // Assumed tab content area for initial layout: 1096 x 650
@@ -197,15 +197,15 @@ static NSColor *FNAccent(void) {
 - (void)setupMenu {
     NSMenu *bar = [[[NSMenu alloc] initWithTitle:@""] autorelease];
 
-    NSMenuItem *appItem = [[[NSMenuItem alloc] initWithTitle:@"Frigate Native"
+    NSMenuItem *appItem = [[[NSMenuItem alloc] initWithTitle:@"Perch"
                                                        action:nil
                                                 keyEquivalent:@""] autorelease];
-    NSMenu *appMenu = [[[NSMenu alloc] initWithTitle:@"Frigate Native"] autorelease];
-    [appMenu addItemWithTitle:@"About Frigate Native"
+    NSMenu *appMenu = [[[NSMenu alloc] initWithTitle:@"Perch"] autorelease];
+    [appMenu addItemWithTitle:@"About Perch"
                        action:@selector(orderFrontStandardAboutPanel:)
                 keyEquivalent:@""];
     [appMenu addItem:[NSMenuItem separatorItem]];
-    [appMenu addItemWithTitle:@"Quit Frigate Native"
+    [appMenu addItemWithTitle:@"Quit Perch"
                        action:@selector(terminate:)
                 keyEquivalent:@"q"];
     [appItem setSubmenu:appMenu];
@@ -235,7 +235,7 @@ static NSColor *FNAccent(void) {
                                           styleMask:style
                                             backing:NSBackingStoreBuffered
                                               defer:NO];
-    [_window setTitle:@"Frigate Native"];
+    [_window setTitle:@"Perch"];
     [_window setMinSize:NSMakeSize(800, 520)];
     [_window setDelegate:self];
     [_window center];
@@ -939,7 +939,7 @@ static NSColor *FNAccent(void) {
 
 - (void)sendGrowl:(NSString *)title message:(NSString *)msg {
     NSArray *args = [NSArray arrayWithObjects:
-                     @"--name",    @"Frigate Native",
+                     @"--name",    @"Perch",
                      @"--title",   title,
                      @"--message", msg, nil];
     for (NSString *path in [NSArray arrayWithObjects:
